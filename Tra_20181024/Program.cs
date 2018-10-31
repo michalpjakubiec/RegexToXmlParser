@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Xml;
 
 namespace Tra_20181024
 {
@@ -79,7 +78,6 @@ namespace Tra_20181024
         {
             var parsedRecordsList = new List<string>();
 
-
             foreach (var group in r.GetGroupNames())
             {
                 Group g = m.Groups[group];
@@ -93,36 +91,6 @@ namespace Tra_20181024
             }
 
             return parsedRecordsList;
-        }
-    }
-
-    public class RegexToXmParser
-    {
-        public XmlDocument XmlDoc { get; set; }
-        public XmlNode RootNode { get; set; }
-        public RegexToXmParser()
-        {
-            XmlDoc = new XmlDocument();
-            RootNode = XmlDoc.CreateElement("products_list");
-            XmlDoc.AppendChild(RootNode);
-        }
-
-        public void AddRecord(List<string> matchedRecordsList, List<string> categoriesList)
-        {
-            var newElement = XmlDoc.CreateElement("product");
-            RootNode.AppendChild(newElement);
-
-            for (int i = 0; i < matchedRecordsList.Count; i++)
-            {
-                XmlNode category = XmlDoc.CreateElement(categoriesList[i]);
-                category.InnerText = matchedRecordsList[i];
-                newElement.AppendChild(category);
-            }
-        }
-
-        public void ExportAsXml(string fileName)
-        {
-            XmlDoc.Save(fileName);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -10,22 +11,26 @@ namespace Tra_20181024
     {
         static void Main(string[] args)
         {
-            string fileName = "input.txt";
+            const string filePath = "t_1a.txt";
 
-            var input = LoadLinesFromFile(fileName);
+            RegexToXmlParser parser = new RegexToXmlParser();
 
-            string pattern = "(\\d?,|[\\s\\d]{10})([A-Z-\\d]+,|[[\\sA-Z-\\d-]{64})([A-Za-z\\s]+,|[\\sA-Za-z]{255})" +
-                             "([\\d.]+,|.{9})([\\d.]+,|.{9})(\\d+,|.{4})(\\d+,|.{4})([\\d\\s-A-Za-z.]+,|.{128})" +
-                             "(\\d,|\\d{1})(\\d+,|[\\d\\s]{3})(.+,|.{128})";
+            const string pattern = "(?<id>\\d+,|[\\s\\d]{10}|(?!\\\"id\\\":\\\")[\\d]+(?!\\\",))" +
+                                   "(?<product_code>[A-Z-\\d]+,|[[\\sA-Z-\\d-]{64})" +
+                                   "(?<product_name>[A-Za-z\\s]+,|[\\sA-Za-z]{255})" +
+                                   "(?<standard_cost>[\\d.]+,|.{9})" +
+                                   "(?<list_price>[\\d.]+,|.{9})" +
+                                   "(?<reorder_level>\\d+,|.{4})" +
+                                   "(?<target_level>\\d+,|.{4})" +
+                                   "(?<quantity_per_unit>[\\d\\s-A-Za-z.]+,|.{128})" +
+                                   "(?<discontinued>\\d,|\\d{1})" +
+                                   "(?<minimum_reorder_quantity>\\d+,|[\\d\\s]{3})" +
+                                   "(?<category>.+,|.{128})";
 
-            List<string> categoriesList = new List<string>
-            {
-                "id","product_code","product_name","standard_cost","list_price","reorder_level","target_level",
-                "quantity_per_unit","discontinued","minimum_reorder_quantity","category"
-            };
-
-            var regexToXmlParser = new RegexToXmParser();
             Regex regex = new Regex(pattern);
+
+            var input = LoadLinesFromFile(filePath);
+            List<string> groupsNamesList = GetGroupNamesAsListFromRegex(regex);
 
             int errorCount = 0;
 
@@ -35,15 +40,15 @@ namespace Tra_20181024
 
                 if (match.Success)
                 {
-                    var parsedLine = ShowMatches(regex, match);
+                    var parsedLine = MatchGroupsInLine(regex, match);
 
-                    if (parsedLine.Count == categoriesList.Count)
+                    if (parsedLine.Count == groupsNamesList.Count)
                     {
-                        regexToXmlParser.AddRecord(parsedLine, categoriesList);
+                        parser.AddRecord(parsedLine, groupsNamesList);
                     }
                     else
                     {
-                        Console.WriteLine($"ERROR \t matched records does not match categories count in line {i + 1}");
+                        Console.WriteLine($"ERROR \t the number of records does not match the number of categories in line {i + 1}");
                         errorCount += 1;
                     }
                 }
@@ -54,41 +59,71 @@ namespace Tra_20181024
                 }
             }
 
-            regexToXmlParser.ExportAsXml("output.xml");
-            Console.WriteLine($"\nSuccessfully parsed {input.Count - errorCount}//{input.Count} lines");
+            Console.WriteLine($"Successfully parsed {input.Count - errorCount}/{input.Count} lines");
+
+            parser.ExportAsXml("output.xml");
+
+            Console.WriteLine();
+            Console.Write("Do you want to view the output file? y\\n: ");
+
+            var choice = Console.Read();
+
+            if (choice == 121 | choice == 89)
+            {
+                Process.Start("output.xml");
+            }
         }
 
         private static List<string> LoadLinesFromFile(string fileName)
         {
             IEnumerable<string> input = new List<string>();
 
-            try
+            if (File.Exists(fileName))
             {
                 input = File.ReadLines(fileName);
             }
-            catch (Exception e)
+            else
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine("Input file not found. Quitting...");
+                Environment.Exit(0);
             }
 
             return input.ToList();
         }
 
-        private static List<string> ShowMatches(Regex r, Match m)
+        private static List<string> GetGroupNamesAsListFromRegex(Regex r)
         {
-            var parsedRecordsList = new List<string>();
+            List<string> groupsNamesList = new List<string>();
+            string[] names = r.GetGroupNames();
 
-            foreach (var group in r.GetGroupNames())
+            foreach (var name in names)
             {
-                Group g = m.Groups[group];
-
-                if (group != "0")
+                if (name != "0")
                 {
-                    var value = g.Value.TrimStart().TrimEnd(',');
-                    //Console.WriteLine("\t{0}:\t{1}", group, value);
-                    parsedRecordsList.Add(value);
+                    groupsNamesList.Add(name);
                 }
             }
+
+            return groupsNamesList;
+        }
+
+        private static List<string> MatchGroupsInLine(Regex r, Match m)
+        {
+            var parsedRecordsList = new List<string>();
+            string[] names = r.GetGroupNames();
+
+            foreach (var name in names)
+            {
+                Group group = m.Groups[name];
+
+                if (name != "0")
+                {
+                    var value = group.Value.TrimStart().TrimEnd(',');
+                    parsedRecordsList.Add(value);
+                    //Console.WriteLine($"\t{name,-50}{value,-60}");
+                }
+            }
+            //Console.WriteLine();
 
             return parsedRecordsList;
         }

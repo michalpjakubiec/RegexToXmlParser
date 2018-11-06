@@ -3,11 +3,11 @@ using System.Xml;
 
 namespace Tra_20181024
 {
-    public class RegexToXmParser
+    public class RegexToXmlParser
     {
         public XmlDocument XmlDoc { get; set; }
         public XmlNode RootNode { get; set; }
-        public RegexToXmParser()
+        public RegexToXmlParser()
         {
             XmlDoc = new XmlDocument();
             RootNode = XmlDoc.CreateElement("products_list");

@@ -15,17 +15,19 @@ namespace Tra_20181024
 
             RegexToXmlParser parser = new RegexToXmlParser();
 
-            const string pattern = "(?<id>\\d+,|[\\s\\d]{10}|(?!\\\"id\\\":\\\")[\\d]+(?!\\\",))" +
-                                   "(?<product_code>[A-Z-\\d]+,|[[\\sA-Z-\\d-]{64})" +
-                                   "(?<product_name>[A-Za-z\\s]+,|[\\sA-Za-z]{255})" +
-                                   "(?<standard_cost>[\\d.]+,|.{9})" +
-                                   "(?<list_price>[\\d.]+,|.{9})" +
-                                   "(?<reorder_level>\\d+,|.{4})" +
-                                   "(?<target_level>\\d+,|.{4})" +
-                                   "(?<quantity_per_unit>[\\d\\s-A-Za-z.]+,|.{128})" +
-                                   "(?<discontinued>\\d,|\\d{1})" +
-                                   "(?<minimum_reorder_quantity>\\d+,|[\\d\\s]{3})" +
-                                   "(?<category>.+,|.{128})";
+
+
+            const string pattern = "(?<id>\\d+,|[\\s\\d]{10}|({\\\"id\\\":\\\")\\d+(\",))" +
+                                   "(?<product_code>[A-Z-\\d]+,|[[\\sA-Z-\\d-]{64}|(\\\"product_code\\\":\\\")[A-Z-\\d]+(\",))" +
+                                   "(?<product_name>[A-Za-z\\s]+,|[\\sA-Za-z]{255}|(\\\"product_name\\\":\\\")[A-Za-z\\s]+(\",))" +
+                                   "(?<standard_cost>[\\d.]+,|[\\s\\d.]{9}|(\\\"standard_cost\\\":\\\")[\\d.]+(\",))" +
+                                   "(?<list_price>[\\d.]+,|.{9}|(\\\"list_price\\\":\\\")[\\d.]+(\",))" +
+                                   "(?<reorder_level>\\d+,|.{4}|(\\\"reorder_level\\\":\\\")\\d+(\",))" +
+                                   "(?<target_level>\\d+,|.{4}|(\\\"target_level\\\":\\\")\\d+(\",))" +
+                                   "(?<quantity_per_unit>[\\d\\s-A-Za-z.]+,|.{128}|(\\\"quantity_per_unit\\\":\\\")[\\d\\s-A-Za-z.]+(\",))" +
+                                   "(?<discontinued>\\d,|\\d{1}|(\\\"discontinued\\\":\\\")\\d(\",))" +
+                                   "(?<minimum_reorder_quantity>\\d+,|[\\d\\s]{3}|(\\\"minimum_reorder_quantity\\\":\\\")\\d+(\",))" +
+                                   "(?<category>[A-Za-z\\s&]+,|.{128}|(\\\"category\\\":\\\").+(\"}))";
 
             Regex regex = new Regex(pattern);
 
@@ -98,7 +100,7 @@ namespace Tra_20181024
 
             foreach (var name in names)
             {
-                if (name != "0")
+                if (name.All(char.IsDigit) == false)
                 {
                     groupsNamesList.Add(name);
                 }
@@ -116,7 +118,7 @@ namespace Tra_20181024
             {
                 Group group = m.Groups[name];
 
-                if (name != "0")
+                if (name.All(char.IsDigit) == false)
                 {
                     var value = group.Value.TrimStart().TrimEnd(',');
                     parsedRecordsList.Add(value);

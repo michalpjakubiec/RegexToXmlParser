@@ -15,24 +15,12 @@ namespace Tra_20181024
 
             RegexToXmlParser parser = new RegexToXmlParser();
 
-
-
-            const string pattern = "(?<id>\\d+,|[\\s\\d]{10}|({\\\"id\\\":\\\")\\d+(\",))" +
-                                   "(?<product_code>[A-Z-\\d]+,|[[\\sA-Z-\\d-]{64}|(\\\"product_code\\\":\\\")[A-Z-\\d]+(\",))" +
-                                   "(?<product_name>[A-Za-z\\s]+,|[\\sA-Za-z]{255}|(\\\"product_name\\\":\\\")[A-Za-z\\s]+(\",))" +
-                                   "(?<standard_cost>[\\d.]+,|[\\s\\d.]{9}|(\\\"standard_cost\\\":\\\")[\\d.]+(\",))" +
-                                   "(?<list_price>[\\d.]+,|.{9}|(\\\"list_price\\\":\\\")[\\d.]+(\",))" +
-                                   "(?<reorder_level>\\d+,|.{4}|(\\\"reorder_level\\\":\\\")\\d+(\",))" +
-                                   "(?<target_level>\\d+,|.{4}|(\\\"target_level\\\":\\\")\\d+(\",))" +
-                                   "(?<quantity_per_unit>[\\d\\s-A-Za-z.]+,|.{128}|(\\\"quantity_per_unit\\\":\\\")[\\d\\s-A-Za-z.]+(\",))" +
-                                   "(?<discontinued>\\d,|\\d{1}|(\\\"discontinued\\\":\\\")\\d(\",))" +
-                                   "(?<minimum_reorder_quantity>\\d+,|[\\d\\s]{3}|(\\\"minimum_reorder_quantity\\\":\\\")\\d+(\",))" +
-                                   "(?<category>[A-Za-z\\s&]+,|.{128}|(\\\"category\\\":\\\").+(\"}))";
+            const string pattern = @"(?:{""id"":""|^\s*)(?<id>\d{1,10})(?:"",""product_code"":""|,|\s*)(?<product_code>[A-Z-\d]{1,64})(?:"",""product_name"":""|,|\s*|)(?<product_name>(?:\s?[A-Za-z]){1,255})(?:"",""standard_cost"":""|,|\s*)(?<standard_cost>[\d.]{1,9})(?:"",""list_price"":""|,|\s*)(?<list_price>[\d.]{1,9})(?:"",""reorder_level"":""|,|\s*)(?<reorder_level>\d{1,4})(?:"",""target_level"":""|,|\s*)(?<target_level>\d{1,4})(?:"",""quantity_per_unit"":""|,|\s*)(?<quantity_per_unit>[\d\s-A-Za-z.]{1,128}(?<!\d|\s))(?:"",""discontinued"":""|,|\s*)(?<discontinued>\d{1})(?:"",""minimum_reorder_quantity"":""|,|\s*)(?<minimum_reorder_quantity>\d{1,3})(?:"",""category"":""|,|\s*)(?<category>[A-Za-z&\s]{1,128})(?:""}|,|$)";
 
             Regex regex = new Regex(pattern);
 
             var input = LoadLinesFromFile(filePath);
-            List<string> groupsNamesList = GetGroupNamesAsListFromRegex(regex);
+            List<string> groupsNamesList = GetGroupsNamesAsList(regex);
 
             int errorCount = 0;
 
@@ -66,7 +54,7 @@ namespace Tra_20181024
             parser.ExportAsXml("output.xml");
 
             Console.WriteLine();
-            Console.Write("Do you want to view the output file? y\\n: ");
+            Console.Write(@"Do you want to view the output file? y\n: ");
 
             var choice = Console.Read();
 
@@ -93,12 +81,12 @@ namespace Tra_20181024
             return input.ToList();
         }
 
-        private static List<string> GetGroupNamesAsListFromRegex(Regex r)
+        private static List<string> GetGroupsNamesAsList(Regex r)
         {
             List<string> groupsNamesList = new List<string>();
-            string[] names = r.GetGroupNames();
+            string[] groupNames = r.GetGroupNames();
 
-            foreach (var name in names)
+            foreach (var name in groupNames)
             {
                 if (name.All(char.IsDigit) == false)
                 {
@@ -112,15 +100,15 @@ namespace Tra_20181024
         private static List<string> MatchGroupsInLine(Regex r, Match m)
         {
             var parsedRecordsList = new List<string>();
-            string[] names = r.GetGroupNames();
+            string[] groupNames = r.GetGroupNames();
 
-            foreach (var name in names)
+            foreach (var name in groupNames)
             {
                 Group group = m.Groups[name];
 
                 if (name.All(char.IsDigit) == false)
                 {
-                    var value = group.Value.TrimStart().TrimEnd(',');
+                    var value = group.Value.TrimStart();
                     parsedRecordsList.Add(value);
                     //Console.WriteLine($"\t{name,-50}{value,-60}");
                 }

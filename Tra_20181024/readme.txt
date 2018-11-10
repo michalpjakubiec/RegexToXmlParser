@@ -1,15 +1,8 @@
-I
-Stała długość kolumn: spacje + wyrównane do prawej text
+Format 1: stała długość kolumn: spacje + wyrównanie do prawej
+Format 2: csv
+Format 3: json
 
-II
-csv
-
-III
-json
-
-Sap: przyjmuje xml
-
-Program wczytujący dane z jednego pliku zawierającego I, II, III,
+Program wczytujący dane z jednego pliku zawierającego fprmat 1, 2, 3, zwracajacy xml
 parsowanie regexem
 biblioteki xml
 
